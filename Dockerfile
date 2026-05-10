@@ -99,7 +99,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Install s6-overlay
     wget -q "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" -O /tmp/s6-noarch.tar.xz && \
     tar -C / -Jxpf /tmp/s6-noarch.tar.xz && \
-    wget -q "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-aarch64.tar.xz" -O /tmp/s6-x86_64.tar.xz && \
+    wget -q "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-aarch64.tar.xz" -O /tmp/s6-aarch64.tar.xz && \
     tar -C / -Jxpf /tmp/s6-aarch64.tar.xz && \
     rm /tmp/s6-noarch.tar.xz /tmp/s6-aarch64.tar.xz && \
     # Install PostgreSQL 15 from PGDG for data migration (15→17) support
