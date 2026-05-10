@@ -89,34 +89,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     redis-server \
     # Nginx
     nginx \
-    # Chrome headless shell dependencies
-    wget ca-certificates openssl unzip \
+    # Chromium browser + font rendering
+    wget ca-certificates openssl \
+    chromium \
     fonts-liberation fonts-noto-color-emoji fonts-noto-cjk fontconfig \
-    libnss3 libatk-bridge2.0-0t64 libdrm2 libxkbcommon0 \
-    libgbm1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-    libasound2t64 libcups2t64 libatk1.0-0t64 libnspr4 libdbus-1-3 \
     # s6-overlay dependencies
     xz-utils \
     && \
-    # Install Chrome Headless Shell
-    CHROME_VERSION=$(wget -qO- "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE") && \
-    wget -q "https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-headless-shell-linux64.zip" -O /tmp/chrome.zip && \
-    unzip /tmp/chrome.zip -d /opt/ && \
-    chmod +x /opt/chrome-headless-shell-linux64/chrome-headless-shell && \
-    rm /tmp/chrome.zip && \
-    # Strip Chrome: remove GPU libs (--disable-gpu), keep locale packs for Unicode/CJK shaping
-    rm -f /opt/chrome-headless-shell-linux64/libEGL.so \
-          /opt/chrome-headless-shell-linux64/libGLESv2.so \
-          /opt/chrome-headless-shell-linux64/libvk_swiftshader.so \
-          /opt/chrome-headless-shell-linux64/libvulkan.so.1 \
-          /opt/chrome-headless-shell-linux64/vk_swiftshader_icd.json \
-          /opt/chrome-headless-shell-linux64/LICENSE.headless_shell && \
     # Install s6-overlay
     wget -q "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" -O /tmp/s6-noarch.tar.xz && \
     tar -C / -Jxpf /tmp/s6-noarch.tar.xz && \
-    wget -q "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz" -O /tmp/s6-x86_64.tar.xz && \
-    tar -C / -Jxpf /tmp/s6-x86_64.tar.xz && \
-    rm /tmp/s6-noarch.tar.xz /tmp/s6-x86_64.tar.xz && \
+    wget -q "https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-aarch64.tar.xz" -O /tmp/s6-x86_64.tar.xz && \
+    tar -C / -Jxpf /tmp/s6-aarch64.tar.xz && \
+    rm /tmp/s6-noarch.tar.xz /tmp/s6-aarch64.tar.xz && \
     # Install PostgreSQL 15 from PGDG for data migration (15→17) support
     # Existing users upgrading from bookworm need PG 15 binaries to dump their data
     echo "deb http://apt.postgresql.org/pub/repos/apt trixie-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
@@ -125,9 +110,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get install -y -qq --no-install-recommends postgresql-15 >/dev/null 2>&1 && \
     rm -rf /var/lib/postgresql/15 /etc/apt/sources.list.d/pgdg.list && \
     # Remove build-only tools normally
-    apt-get purge -y unzip xz-utils wget && apt-get autoremove -y && \
+    apt-get purge -y xz-utils wget && apt-get autoremove -y && \
     # Force-remove transitive deps not needed at runtime
-    # (bypass dependency checks to avoid cascading removal of postgresql/chrome)
+    # (bypass dependency checks to avoid cascading removal of postgresql/chromium)
     dpkg --purge --force-depends \
     libllvm19 libz3-4 libperl5.40 perl perl-modules-5.40 \
     libavahi-client3 libavahi-common-data libavahi-common3 \
@@ -149,7 +134,7 @@ RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx
 COPY --from=node:22-slim /usr/local/bin/node /usr/local/bin/node
 
 # Puppeteer configuration
-ENV PUPPETEER_EXECUTABLE_PATH=/opt/chrome-headless-shell-linux64/chrome-headless-shell
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Application environment defaults
